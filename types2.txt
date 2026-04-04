@@ -1,0 +1,85 @@
+components/SecureDealModal.tsx(1,33): error TS7016: Could not find a declaration file for module 'react'. 'C:/Users/ajayk/OneDrive/Desktop/LocalCollab_Hackathon/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+components/SecureDealModal.tsx(103,84): error TS2322: Type 'string' is not assignable to type 'Address'.
+components/SecureDealModal.tsx(107,63): error TS2322: Type 'string' is not assignable to type 'Address'.
+components/SecureDealModal.tsx(122,15): error TS2339: Property 'txId' does not exist on type 'PostTransactionsResponse'.
+components/SecureDealModal.tsx(133,22): error TS2554: Expected 1 arguments, but got 0.
+components/SecureDealModal.tsx(157,5): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. 'C:/Users/ajayk/OneDrive/Desktop/LocalCollab_Hackathon/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+components/SecureDealModal.tsx(178,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(183,13): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(187,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(195,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(195,108): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(196,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(198,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(199,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(200,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(208,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(209,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(217,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(218,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(219,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(221,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(229,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(229,101): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(230,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(232,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(233,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(235,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(236,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(241,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(242,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(247,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(248,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(250,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(251,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(252,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(254,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(255,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(255,100): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(256,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(258,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(259,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(259,88): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(260,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(260,86): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(262,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(263,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(263,87): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(264,21): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(264,105): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(265,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(266,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(268,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(270,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(270,141): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(271,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(273,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(274,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(289,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(290,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(295,19): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(296,17): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+components/SecureDealModal.tsx(297,15): error TS7026: JSX element implicitly has type 'any' because no interface 'JSX.IntrinsicElements' exists.
+node_modules/framer-motion/dist/types.d-DOCC-kZB.d.ts(1,83): error TS7016: Could not find a declaration file for module 'react'. 'C:/Users/ajayk/OneDrive/Desktop/LocalCollab_Hackathon/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+node_modules/framer-motion/dist/types.d-DOCC-kZB.d.ts(50,16): error TS2503: Cannot find namespace 'React'.
+node_modules/framer-motion/dist/types.d-DOCC-kZB.d.ts(172,14): error TS2552: Cannot find name 'HTMLWebViewElement'. Did you mean 'HTMLVideoElement'?
+node_modules/framer-motion/dist/types.d-DOCC-kZB.d.ts(208,45): error TS2503: Cannot find namespace 'React'.
+node_modules/framer-motion/dist/types/index.d.ts(1,23): error TS2688: Cannot find type definition file for 'react'.
+node_modules/framer-motion/dist/types/index.d.ts(6,36): error TS7016: Could not find a declaration file for module 'react/jsx-runtime'. 'C:/Users/ajayk/OneDrive/Desktop/LocalCollab_Hackathon/node_modules/react/jsx-runtime.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react/jsx-runtime';`
+node_modules/framer-motion/dist/types/index.d.ts(7,26): error TS7016: Could not find a declaration file for module 'react'. 'C:/Users/ajayk/OneDrive/Desktop/LocalCollab_Hackathon/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+node_modules/framer-motion/dist/types/index.d.ts(8,43): error TS7016: Could not find a declaration file for module 'react'. 'C:/Users/ajayk/OneDrive/Desktop/LocalCollab_Hackathon/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+node_modules/framer-motion/dist/types/index.d.ts(251,131): error TS2503: Cannot find namespace 'React'.
+node_modules/framer-motion/dist/types/index.d.ts(304,16): error TS2503: Cannot find namespace 'React'.
+node_modules/framer-motion/dist/types/index.d.ts(1293,47): error TS2503: Cannot find namespace 'React'.
+node_modules/framer-motion/dist/types/index.d.ts(1301,51): error TS2503: Cannot find namespace 'React'.
+node_modules/framer-motion/dist/types/index.d.ts(1301,82): error TS2503: Cannot find namespace 'React'.
+node_modules/lucide-react/dist/lucide-react.d.ts(1,24): error TS7016: Could not find a declaration file for module 'react'. 'C:/Users/ajayk/OneDrive/Desktop/LocalCollab_Hackathon/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
+node_modules/lucide-react/dist/lucide-react.d.ts(2,78): error TS7016: Could not find a declaration file for module 'react'. 'C:/Users/ajayk/OneDrive/Desktop/LocalCollab_Hackathon/node_modules/react/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react` if it exists or add a new declaration (.d.ts) file containing `declare module 'react';`
