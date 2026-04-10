@@ -1,7 +1,6 @@
 # 🤝 LocalCollab
 
 **LocalCollab** is an AI-powered marketplace that connects **local businesses** with **micro-influencers** — making influencer marketing affordable, transparent, and hyper-local.
-
 ---
 ## 🌟 What Is This Project?
 
