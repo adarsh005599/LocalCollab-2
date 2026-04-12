@@ -145,7 +145,7 @@ Landing Page (/)
     └── Sign Up as Influencer  →  Influencer Profile Setup  →  Influencer Dashboard
                                                                    ├── Browse Opportunities
                                                                    ├── Messages
-                                                                   └── Manage Profile
+                                                             └── Manage Profile
 ```
 
 ---
