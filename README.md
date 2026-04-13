@@ -11,7 +11,6 @@ Many small businesses (restaurants, boutiques, gyms, salons, etc.) want to promo
 - 📸 **Influencers** can list their profile, set their price per post, and discover collaboration opportunities from nearby businesses.
 
 ---
-
 ## ✨ Key Features
 
 ### For Businesses (Shops)
