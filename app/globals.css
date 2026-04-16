@@ -6,7 +6,7 @@
 
 @layer base {
   body {
-    @apply bg-[#F5F5DC] text-[#1E293B] font-sans antialiased;
+    @apply bg-transparent text-[#1E293B] font-sans antialiased;  
   }
 }
 

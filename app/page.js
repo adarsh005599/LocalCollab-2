@@ -61,6 +61,7 @@ const PHRASES = [
   "verified brands",
 ];
 
+
 function TypingText() {
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [displayed, setDisplayed] = useState('');
@@ -179,37 +180,6 @@ const handleFaqClick = (index) => {
 return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: C.bg, color: C.text, overflowX: 'hidden', minHeight: '100vh' }}>
 
-            {/* ── NAVBAR ── */}
-             <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-white/40 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>
-                <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2 group">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-700 flex items-center justify-center group-hover:rotate-12 transition-transform">
-                            <Handshake size={22} color="#fff" />
-                        </div>
-                        <span className="text-2xl font-black tracking-tighter">
-                           <span className='text-emerald-500'>Local</span> <span className="text-emerald-600">Collab</span>
-                        </span>
-                    </Link>
-
-                    <div className="hidden md:flex items-center gap-8">
-                        {['Solutions', 'Find Creators', 'Pricing', 'Case Studies'].map(item => (
-                            <a key={item} href="#" className="text-sm font-bold text-green-700 hover:text-emerald-600 transition-colors">{item}</a>
-                        ))}
-                    </div>
-
-                    <div className="hidden md:flex items-center gap-4">
-                        <Link href="/login" className="text-sm  text-green-700 font-bold hover:text-emerald-600 transition-colors">Sign In</Link>
-                        <Link href="/signup" className="bg-emerald-700 hover:bg-emerald-800 text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all hover:scale-105  shadow-emerald-200">
-                            Get Started
-                        </Link>
-                    </div>
-
-                    <button onClick={() => setMenu(!menu)} className="md:hidden p-2">
-                        {menu ? <X /> : <Menu />}
-                    </button>
-                </div>
-            </nav>
-
             {/* ── HERO ── */}
             <section
                 className="hero-mesh"
@@ -232,7 +202,7 @@ return (
                         Find verified creators, in-demand brand opportunities, and the solutions you need to build authentic community marketing.
                     </p>
 
-<SearchBar
+<SearchBar 
   C={C}
   searchQuery={searchQuery}
   setSearchQuery={setSearchQuery}
@@ -424,146 +394,7 @@ Still confused? Ask your question & get a quick reply →                       
                 </div>
             </section>
 
-           {/* ── FOOTER ── */}
-<footer style={{ background:  "#1B2A22", color: '#fff', fontFamily: 'Inter, sans-serif', overflow: 'hidden', position: 'relative' }}>
-
-    {/* Big brand statement strip - REPLACE the inner div */}
-<div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '28px 24px' }}>
-    <div style={{ maxWidth: 1280, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-        
-        {/* Left text */}
-        <div>
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: C.primaryLight, margin: '0 0 6px' }}>
-                ✦ Connecting India's Local Economy ✦
-            </p>
-            <h2 style={{ fontSize: 'clamp(32px, 5vw, 40px)', fontWeight: 900, letterSpacing: '-0.02em', margin: 0, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', lineHeight: 1.1 }}>
-                Grow <span style={{ color: C.primary }}>Local.</span>{' '}
-                Go <span style={{ WebkitTextStroke: '1.5px ' + C.primary, color: 'transparent' }}>Viral.</span>
-            </h2>
-        </div>
-
-        {/* Right CTA */}
-        <Link href="/signup" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '13px 28px', background: C.primary, color: '#fff',
-            borderRadius: 100, fontSize: 15, fontWeight: 700, textDecoration: 'none',
-            whiteSpace: 'nowrap', transition: 'all 0.2s', flexShrink: 0
-        }}
-            onMouseEnter={e => e.currentTarget.style.background = C.primaryHover}
-            onMouseLeave={e => e.currentTarget.style.background = C.primary}
-        >
-            Get Started Free <ArrowRight size={16} />
-        </Link>
-    </div>
-</div>
-
-    {/* Main footer grid */}
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 24px 48px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 48 }} className="footer-grid">
-
-        {/* Brand col */}
-        <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Handshake size={22} color="#fff" />
-                </div>
-                <span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>Local<span style={{ color: C.primaryLight }}>Collab</span></span>
-            </div>
-            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, maxWidth: 280, marginBottom: 32 }}>
-                The smartest way to connect Indian local businesses with authentic, vetted micro-influencers.
-            </p>
-            {/* Social icons */}
-            <div style={{ display: 'flex', gap: 12 }}>
-                {[
-                    { Icon: FaInstagram, color: '#E1306C', href: '#' },
-                    { Icon: FaLinkedin, color: '#0077B5', href: '#' },
-                    { Icon: FaWhatsapp, color: '#25D366', href: '#' },
-                ].map(({ Icon, color, href }, i) => (
-                    <a key={i} href={href} style={{
-                        width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.07)',
-                        border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', color, fontSize: 18, textDecoration: 'none', transition: 'all 0.2s'
-                    }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.14)'; e.currentTarget.style.transform = 'scale(1.1)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.transform = 'scale(1)'; }}
-                    >
-                        <Icon />
-                    </a>
-                ))}
-            </div>
-        </div>
-
-        {/* Platform */}
-        <div>
-            <h4 style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>Platform</h4>
-            {['Find Influencers', 'Post an Opportunity', 'AI Matching Tool', 'Pricing & Plans', 'Success Stories'].map(l => (
-                <a key={l} href="#" style={{ display: 'block', fontSize: 15, color: 'rgba(255,255,255,0.6)', textDecoration: 'none', marginBottom: 14, transition: 'color 0.2s' }}
-                    onMouseEnter={e => e.target.style.color = '#fff'}
-                    onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}>{l}</a>
-            ))}
-        </div>
-
-        {/* Company */}
-        <div>
-            <h4 style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>Company</h4>
-            {['About Us', 'Meet the Team', 'Blog & Insights', 'Careers', 'Contact Us'].map(l => (
-                <a key={l} href="#" style={{ display: 'block', fontSize: 15, color: 'rgba(255,255,255,0.6)', textDecoration: 'none', marginBottom: 14, transition: 'color 0.2s' }}
-                    onMouseEnter={e => e.target.style.color = '#fff'}
-                    onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}>{l}</a>
-            ))}
-        </div>
-
-        {/* Legal + Contact */}
-        <div>
-            <h4 style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 20 }}>Legal</h4>
-            {['Privacy Policy', 'Terms of Service', 'Refund Policy', 'Support & Trust'].map(l => (
-                <a key={l} href="#" style={{ display: 'block', fontSize: 15, color: 'rgba(255,255,255,0.6)', textDecoration: 'none', marginBottom: 14, transition: 'color 0.2s' }}
-                    onMouseEnter={e => e.target.style.color = '#fff'}
-                    onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}>{l}</a>
-            ))}
-            <div style={{ marginTop: 28, padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)' }}>
-                <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 8 }}>Contact Team</p>
-                <a href="mailto:localcollab@gmail.com" style={{ display: 'block', fontSize: 13, color: C.primaryLight, textDecoration: 'none', marginBottom: 4 }}>localcollab@gmail.com</a>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', margin: 0 }}>Replies within 24 hours</p>
-            </div>
-        </div>
-    </div>
-
-    {/* Join role badges */}
-    <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '24px', maxWidth: 1280, margin: '0 auto' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                {[
-                    { label: 'Join as Business', href: '/signup?role=shop' },
-                    { label: 'Join as Influencer', href: '/signup?role=influencer' },
-                    { label: 'AI Matching', href: '/signup' },
-                    { label: 'View Pricing', href: '#' },
-                ].map(({ label, href }) => (
-                    <Link key={label} href={href} style={{
-                        padding: '7px 16px', background: 'rgba(57,119,84,0.15)', color: C.primaryLight,
-                        border: `1px solid rgba(57,119,84,0.3)`, borderRadius: 8,
-                        fontSize: 12, fontWeight: 700, textDecoration: 'none',
-                        textTransform: 'uppercase', letterSpacing: '0.08em', transition: 'all 0.2s'
-                    }}
-                        onMouseEnter={e => { e.currentTarget.style.background = C.primary; e.currentTarget.style.color = '#fff'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(57,119,84,0.15)'; e.currentTarget.style.color = C.primaryLight; }}
-                    >{label}</Link>
-                ))}
-            </div>
-            <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 13, fontStyle: 'italic', fontWeight: 700, color: 'rgba(255,255,255,0.4)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1.4 }}>
-                    Accelerating India's<br />Local Creators.
-                </p>
-            </div>
-        </div>
-    </div>
-
-    {/* Bottom bar */}
-    <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: 0, letterSpacing: '0.1em', textTransform: 'uppercase' }}>© 2025 LocalCollab. All rights reserved.</p>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: 0, fontStyle: 'italic' }}>Where local brands rise, no matter where you start</p>
-    </div>
-</footer>
-
+         
 <style>{`
     @media (max-width: 900px) {
         .footer-grid { grid-template-columns: 1fr 1fr !important; }
