@@ -23,7 +23,7 @@ export default function Navbar() {
     }, []);
 
     return (
-<header className="fixed top-0 left-0 right-0 z-[100] flex justify-center transition-all duration-500 bg-transparent">
+<header className="fixed font-display top-0 left-0 right-0 z-[100] flex justify-center transition-all duration-500 bg-transparent">
 
   <nav className={`flex items-center justify-between transition-all duration-500 px-6 h-14 w-full
     ${scrolled 

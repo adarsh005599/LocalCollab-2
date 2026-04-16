@@ -11,6 +11,8 @@ import {
 import { FaInstagram, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import SearchBar from './search';// Add to your imports at top (already have Handshake, ArrowRight from lucide)
 import ChatWidget from '../components/ChatWidget';
+import CampaignGenerator from "../components/CampaignGenerator";
+
 /* ─── Theme colours ─── */
 const C = {
     bg: '#FFF7ED', // Soft Cream
@@ -157,6 +159,7 @@ export default function HomePage() {
     const [menu, setMenu] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchCity, setSearchCity] = useState('');
+    const [aiResult, setAiResult] = useState(null);
 const filteredFaqData = faqData.filter(item =>
         item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.answer.toLowerCase().includes(searchTerm.toLowerCase())
@@ -178,16 +181,16 @@ const handleFaqClick = (index) => {
 };
 
 return (
-    <div style={{ fontFamily: 'Inter, sans-serif', background: C.bg, color: C.text, overflowX: 'hidden', minHeight: '100vh' }}>
+    <div style={{ font:'display', background: C.bg, color: C.text, overflowX: 'hidden', minHeight: '100vh' }}>
 
             {/* ── HERO ── */}
             <section
-                className="hero-mesh"
+                className="hero-mesh font-display"
                 style={{
                     '--hero-bg': "url('/hero-bg.jpg')",
-                    paddingTop: 130,
-                    paddingBottom: 80,
-                    minHeight: '85vh',
+                    paddingTop: 100,
+                    paddingBottom: 70,
+                    minHeight: '70vh',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center'
@@ -203,18 +206,27 @@ return (
                     </p>
 
 <SearchBar 
-  C={C}
-  searchQuery={searchQuery}
-  setSearchQuery={setSearchQuery}
-  searchCity={searchCity}
-  setSearchCity={setSearchCity}
-/>
+        C={{ textMuted: "#64748b",font:'display' }}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        searchCity={searchCity}
+        setSearchCity={setSearchCity}
+        setAiResult={setAiResult} // Passed to the SearchBar
+      />
+
+      {/* Display the AI Result below the search bar */}
+      {aiResult && (
+        <div className="result-container">
+           <h3>AI Strategy for {searchQuery} in {searchCity}</h3>
+           <pre style={{ whiteSpace: 'pre-wrap' }}>{aiResult}</pre>
+        </div>
+      )}
 
                 </div>
                 
             </section>
              {/* ── STATS ── */}
-            <section className="py-10 bg-emerald-900 text-white">
+            <section className="py-5 font-display bg-emerald-900 text-white">
                 <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                     {[
                         { label: 'Verified Creators', value: '1K+' },
@@ -232,15 +244,26 @@ return (
 
 
             {/* ── OUR SERVICES (Weboxi Style) ── */}
-            <section style={{ padding: '100px 24px', background: C.surface }}>
+            <section style={{ padding: '100px 24px' , background: C.surface }}>
                 <div style={{ maxWidth: 1280, margin: '0 auto' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 48, flexWrap: 'wrap', gap: 24 }}>
-                        <div>
-                            <p style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.secondary, marginBottom: 12 }}>✦ Our Platform Solutions ✦</p>
-                            <h2 style={{ fontSize: 'clamp(32px,4vw,48px)', fontWeight: 900, color: C.text, margin: 0 }}>Built the Future of Growth<br />Through Community.</h2>
-                        </div>
-                        <Link href="/signup" className="btn-outline">Explore Features <ArrowRight size={18} /></Link>
-                    </div>
+ <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 48, flexWrap: 'wrap', gap: 24 }}>
+    
+    <div>
+        <p style={{ fontSize: 14, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.secondary, marginBottom: 12 }}>
+            ✦ Our Platform Solutions ✦
+        </p>
+
+        <h2  className="font-display tracking-tight leading-tight"
+  style={{ fontSize: 'clamp(32px,4vw,48px)', fontWeight: 700, color: C.text, margin: 0 }}>
+            Built the Future of Growth<br />Through Community.
+        </h2>
+    </div>
+
+    <Link href="/signup" className="btn-outline">
+        Explore Features <ArrowRight size={18} />
+    </Link>
+
+</div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
                         {/* Service Card 1 */}
@@ -275,6 +298,8 @@ return (
                     </div>
                 </div>
             </section>
+                    <CampaignGenerator />
+
 
             {/* ── TWO SIDES (Split approach) ── */}
             <section style={{ padding: '0 0', display: 'flex', flexWrap: 'wrap' }}>
@@ -393,6 +418,8 @@ Still confused? Ask your question & get a quick reply →                       
 
                 </div>
             </section>
+            
+
 
          
 <style>{`
