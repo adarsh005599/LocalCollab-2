@@ -1,9 +1,7 @@
 # 🤝 LocalCollab
 
 **LocalCollab** is an AI-powered marketplace that connects **local businesses** with **micro-influencers** — making influencer marketing affordable, transparent, and hyper-local.
-
 ---
-
 ## 🌟 What Is This Project?
 
 Many small businesses (restaurants, boutiques, gyms, salons, etc.) want to promote themselves through social media influencers but can't afford large agencies or celebrity influencers. On the other side, thousands of micro-influencers with engaged local audiences struggle to find paid collaboration opportunities.
@@ -13,7 +11,6 @@ Many small businesses (restaurants, boutiques, gyms, salons, etc.) want to promo
 - 📸 **Influencers** can list their profile, set their price per post, and discover collaboration opportunities from nearby businesses.
 
 ---
-
 ## ✨ Key Features
 
 ### For Businesses (Shops)
@@ -147,7 +144,7 @@ Landing Page (/)
     └── Sign Up as Influencer  →  Influencer Profile Setup  →  Influencer Dashboard
                                                                    ├── Browse Opportunities
                                                                    ├── Messages
-                                                                   └── Manage Profile
+                                                             └── Manage Profile
 ```
 
 ---
