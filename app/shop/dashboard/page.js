@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, Search, MessageCircle, User, Users, Zap, Handshake, X, DollarSign } from 'lucide-react';
+import { TrendingUp, Search, MessageCircle, User, Users, Zap, Handshake, X, DollarSign, Bell } from 'lucide-react';
 import { storage } from '@/lib/storage';
+import { supabase } from '@/lib/supabase';
 import { getRecommendedInfluencers } from '@/lib/matching';
 import { formatCurrency, formatNumber, getInitials } from '@/lib/utils';
 import Sidebar from '@/components/Sidebar';
@@ -36,6 +37,33 @@ const shopNav = [
     { href: '/shop/profile', icon: <User size={18} />, label: 'Profile' },
 ];
 
+// ── Toast notification component ──
+function Toast({ toasts, onDismiss }) {
+    return (
+        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 360 }}>
+            {toasts.map(t => (
+                <div key={t.id} style={{
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderLeft: `4px solid ${t.type === 'offer' ? C.secondary : C.primary}`,
+                    borderRadius: 12, padding: '14px 16px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                    animation: 'slideIn 0.3s ease',
+                }}>
+                    <Bell size={18} color={t.type === 'offer' ? C.secondary : C.primary} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px' }}>{t.title}</p>
+                        <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>{t.message}</p>
+                    </div>
+                    <button onClick={() => onDismiss(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textMuted, padding: 0, flexShrink: 0 }}>
+                        <X size={14} />
+                    </button>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function ShopDashboardPage() {
     const router = useRouter();
     const [currentUser, setCurrentUser] = useState(null);
@@ -43,11 +71,45 @@ export default function ShopDashboardPage() {
     const [recommendations, setRecommendations] = useState([]);
     const [stats, setStats] = useState({ collaborations: 0, active: 0 });
     const [loading, setLoading] = useState(true);
+    const [toasts, setToasts] = useState([]);
+    const shopRef = useRef(null); // stable ref for use inside subscriptions
+    const prevOfferCount = useRef(null);
+
     // Offer modal
-    const [offerModal, setOfferModal] = useState(null); // { influencer }
+    const [offerModal, setOfferModal] = useState(null);
     const [offerForm, setOfferForm] = useState({ price: '', message: '' });
     const [offerSubmitting, setOfferSubmitting] = useState(false);
     const [offerSuccess, setOfferSuccess] = useState(false);
+
+    const addToast = useCallback((title, message, type = 'info') => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, title, message, type }]);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
+    }, []);
+
+    const dismissToast = useCallback((id) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+    }, []);
+
+    const fetchStats = useCallback(async (shopProfile) => {
+        try {
+            const collabs = await storage.getCollaborations();
+            const myCollabs = collabs.filter(c => c.shop_id === shopProfile.id);
+            setStats({ collaborations: myCollabs.length, active: myCollabs.filter(c => c.status === 'accepted').length });
+        } catch (e) { console.error('fetchStats error:', e); }
+    }, []);
+
+    const fetchOfferCount = useCallback(async (shopProfile) => {
+        try {
+            const offers = await storage.getOffersForShop(shopProfile.id);
+            // New offer notification: influencer sent an offer and it's shop's turn
+            const newCount = offers.filter(o => o.status === 'active' && o.latestSenderRole === 'influencer').length;
+            if (prevOfferCount.current !== null && newCount > prevOfferCount.current) {
+                addToast('New Offer Received! 🎉', 'An influencer sent you a new offer or counter. Check your Offers tab.', 'offer');
+            }
+            prevOfferCount.current = newCount;
+        } catch (e) { console.error('fetchOfferCount error:', e); }
+    }, [addToast]);
 
     useEffect(() => {
         const init = async () => {
@@ -57,14 +119,48 @@ export default function ShopDashboardPage() {
             const shopProfile = await storage.getShopByUserId(user.id);
             if (!shopProfile) { router.push('/shop/profile?setup=true'); return; }
             setShop(shopProfile);
-            const [allInfluencers, collabs] = await Promise.all([storage.getInfluencers(), storage.getCollaborations()]);
+            shopRef.current = shopProfile;
+
+            const allInfluencers = await storage.getInfluencers();
             setRecommendations(getRecommendedInfluencers(shopProfile, allInfluencers, 6));
-            const myCollabs = collabs.filter(c => c.shop_id === shopProfile.id);
-            setStats({ collaborations: myCollabs.length, active: myCollabs.filter(c => c.status === 'accepted').length });
+            await fetchStats(shopProfile);
+            await fetchOfferCount(shopProfile);
             setLoading(false);
         };
         init();
-    }, [router]);
+    }, [router, fetchStats, fetchOfferCount]);
+
+    // ── Real-time Supabase subscription on offers table ──
+    useEffect(() => {
+        if (!shop) return;
+
+        const channel = supabase
+            .channel('shop-dashboard-offers')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'offers',
+                filter: `shop_id=eq.${shop.id}`,
+            }, async (payload) => {
+                // Refetch stats silently
+                await fetchStats(shopRef.current);
+                await fetchOfferCount(shopRef.current);
+            })
+            .subscribe();
+
+        // Also poll every 30s as fallback
+        const poll = setInterval(async () => {
+            if (shopRef.current) {
+                await fetchStats(shopRef.current);
+                await fetchOfferCount(shopRef.current);
+            }
+        }, 30000);
+
+        return () => {
+            supabase.removeChannel(channel);
+            clearInterval(poll);
+        };
+    }, [shop, fetchStats, fetchOfferCount]);
 
     const openOfferModal = (influencer) => {
         setOfferForm({ price: '', message: '' });
@@ -84,6 +180,7 @@ export default function ShopDashboardPage() {
                 message: offerForm.message || null,
             });
             setOfferSuccess(true);
+            addToast('Offer Sent!', `Your offer to ${offerModal.influencer.name} was sent successfully.`, 'info');
             setTimeout(() => setOfferModal(null), 2000);
         } catch (e) { alert('Failed to send offer: ' + e.message); }
         setOfferSubmitting(false);
@@ -100,6 +197,7 @@ export default function ShopDashboardPage() {
 
     return (
         <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif' }}>
+            <Toast toasts={toasts} onDismiss={dismissToast} />
             <Sidebar navItems={shopNav} user={sidebarUser} onLogout={handleLogout} />
 
             <main style={{ marginLeft: 280, padding: 40 }}>
@@ -215,6 +313,11 @@ export default function ShopDashboardPage() {
                     </div>
                 </div>
             )}
+
+            <style>{`
+                @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+                @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+            `}</style>
         </div>
     );
 }
@@ -234,9 +337,7 @@ function InfluencerCard({ influencer, onMakeOffer }) {
                     <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>{influencer.city}</p>
                 </div>
             </div>
-
             <span style={{ display: 'inline-block', padding: '4px 12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 20, fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 20 }}>{influencer.category}</span>
-
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, borderTop: `1px solid ${C.border}`, paddingTop: 16, marginBottom: 24 }}>
                 {[['Followers', formatNumber(influencer.followers)], ['Engagement', `${influencer.engagementRate}%`], ['Per Post', formatCurrency(influencer.pricePerPost)]].map(([l, v]) => (
                     <div key={l} style={{ textAlign: 'center' }}>
@@ -245,7 +346,6 @@ function InfluencerCard({ influencer, onMakeOffer }) {
                     </div>
                 ))}
             </div>
-
             <button onClick={onMakeOffer} className="btn-primary" style={{ width: '100%', padding: '12px' }}>
                 <Handshake size={18} /> Make an Offer
             </button>

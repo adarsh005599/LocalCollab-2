@@ -301,58 +301,135 @@ return (
                     <CampaignGenerator />
 
 
-            {/* ── TWO SIDES (Split approach) ── */}
-            <section style={{ padding: '0 0', display: 'flex', flexWrap: 'wrap' }}>
-                <div style={{ flex: '1 1 50%', background: C.bg, padding: '100px 5%' }}>
-                    <div style={{ maxWidth: 500, margin: '0 0 0 auto' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 100, background: 'rgba(57,119,84,0.1)', color: C.primary, fontSize: 13, fontWeight: 700, marginBottom: 24 }}>
-                            <CheckCircle size={16} /> Verified Quality
-                        </div>
-                        <h2 style={{ fontSize: 'clamp(32px,4vw,44px)', fontWeight: 900, color: C.text, margin: '0 0 20px', lineHeight: 1.2 }}>Scale your brand<br />locally, faster.</h2>
-                        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px' }}>
-                            {['Create a free brand profile in minutes', 'Search 1,000+ verified Indian creators', 'Directly message and negotiate terms', 'Zero commission. Zero middleman fees.'].map((item, i) => (
-                                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, fontSize: 16, color: C.textMuted }}>
-                                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <CheckCircle size={12} color="#fff" />
-                                    </div>
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                        <Link href="/signup?role=shop" className="btn-primary">Browse Creators</Link>
-                    </div>
-                </div>
+           {/* ── TWO SIDES (Split approach) ── */}
+<section style={{ padding: '0 0', display: 'flex', flexWrap: 'wrap' }}>
 
-                <div style={{ flex: '1 1 50%', background: C.surface, padding: '100px 5%', borderLeft: `1px solid ${C.border}` }}>
-                    <div style={{ maxWidth: 500, margin: '0 auto 0 0' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 100, background: 'rgba(235,107,64,0.1)', color: C.secondary, fontSize: 13, fontWeight: 700, marginBottom: 24 }}>
-                            <MessageSquare size={16} /> Authentic Influence
-                        </div>
-                        <h2 style={{ fontSize: 'clamp(32px,4vw,44px)', fontWeight: 900, color: C.text, margin: '0 0 20px', lineHeight: 1.2 }}>Monetize your<br />audience safely.</h2>
-                        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px' }}>
-                            {['Set your own rates and schedule', 'Collaborate only with verified businesses', 'Automatic engagement calculation', 'Get matched with relevant brands'].map((item, i) => (
-                                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, fontSize: 16, color: C.textMuted }}>
-                                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: C.secondary, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <CheckCircle size={12} color="#fff" />
-                                    </div>
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                        <Link href="/signup?role=influencer" className="btn-secondary">Find Opportunities</Link>
-                    </div>
-                </div>
-            </section>
+  {/* LEFT SIDE */}
+  <div style={{ flex: '1 1 50%', background: C.bg, padding: '100px 5%' }}>
+    <div style={{ maxWidth: 500, margin: '0 0 0 auto' }}>
+
+      <div style={{ 
+        display: 'inline-flex', alignItems: 'center', gap: 8, 
+        padding: '6px 14px', borderRadius: 100, 
+        background: 'rgba(57,119,84,0.1)', color: C.primary, 
+        fontSize: 13, fontWeight: 700, marginBottom: 24 
+      }}>
+        <CheckCircle size={16} /> Verified Quality
+      </div>
+
+      <h2 
+        className="font-display tracking-tight leading-tight"
+        style={{ 
+          fontSize: 'clamp(32px,4vw,44px)', 
+          fontWeight: 700, 
+          color: C.text, 
+          margin: '0 0 20px' 
+        }}
+      >
+        Scale your brand<br />locally, faster.
+      </h2>
+
+      <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px' }}>
+        {[
+          'Create a free brand profile in minutes',
+          'Search 1,000+ verified Indian creators',
+          'Directly message and negotiate terms',
+          'Zero commission. Zero middleman fees.'
+        ].map((item, i) => (
+          <li key={i} style={{ 
+            display: 'flex', alignItems: 'center', gap: 12, 
+            marginBottom: 16, fontSize: 16, color: C.textMuted 
+          }}>
+            <div style={{ 
+              width: 20, height: 20, borderRadius: '50%', 
+              background: C.primary, display: 'flex', 
+              alignItems: 'center', justifyContent: 'center', 
+              flexShrink: 0 
+            }}>
+              <CheckCircle size={12} color="#fff" />
+            </div>
+            {item}
+          </li>
+        ))}
+      </ul>
+<br/>
+      <Link href="/signup?role=shop" className="btn-primary">
+        Browse Creators
+      </Link>
+
+    </div>
+  </div>
+
+  {/* RIGHT SIDE */}
+  <div style={{ 
+    flex: '1 1 50%', background: C.surface, 
+    padding: '100px 5%', borderLeft: `1px solid ${C.border}` 
+  }}>
+    <div style={{ maxWidth: 500, margin: '0 auto 0 0' }}>
+
+      <div style={{ 
+        display: 'inline-flex', alignItems: 'center', gap: 8, 
+        padding: '6px 14px', borderRadius: 100, 
+        background: 'rgba(235,107,64,0.1)', color: C.secondary, 
+        fontSize: 13, fontWeight: 700, marginBottom: 24 
+      }}>
+        <MessageSquare size={16} /> Authentic Influence
+      </div>
+
+      <h2 
+        className="font-display tracking-tight leading-tight"
+        style={{ 
+          fontSize: 'clamp(32px,4vw,44px)', 
+          fontWeight: 700, 
+          color: C.text, 
+          margin: '0 0 20px' 
+        }}
+      >
+        Monetize your<br />audience safely.
+      </h2>
+
+      <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px' }}>
+        {[
+          'Set your own rates and schedule',
+          'Collaborate only with verified businesses',
+          'Automatic engagement calculation',
+          'Get matched with relevant brands'
+        ].map((item, i) => (
+          <li key={i} style={{ 
+            display: 'flex', alignItems: 'center', gap: 12, 
+            marginBottom: 16, fontSize: 16, color: C.textMuted 
+          }}>
+            <div style={{ 
+              width: 20, height: 20, borderRadius: '50%', 
+              background: C.secondary, display: 'flex', 
+              alignItems: 'center', justifyContent: 'center', 
+              flexShrink: 0 
+            }}>
+              <CheckCircle size={12} color="#fff" />
+            </div>
+            {item}
+          </li>
+        ))}
+      </ul>
+<br/>
+      <Link href="/signup?role=influencer" className="btn-secondary">
+        Find Opportunities
+      </Link>
+
+    </div>
+  </div>
+
+</section>
 
             <section id="faq" className={`py-20 bg-white`}>
                 <div className="max-w-4xl mx-auto px-6">
                     
                     {/* Section Header */}
-                    <h2 className={`text-3xl md:text-5xl font-extrabold mb-4 text-${COLORS.DARK_TEXT} text-center`}>
+                    <h2 className={`text-3xl md:text-5xl font-display font-bold mb-4 text-${COLORS.DARK_TEXT} text-center`}>
                         Frequently Asked Questions
                     </h2>
                     
-                    <p className="text-lg text-gray-500 mb-10 text-center">
+                    <p className="text-lg text-gray-500 font-display mb-10 text-center">
                         Can't find an answer? Search below or reach out to our team.
                     </p>
 
@@ -393,7 +470,7 @@ return (
 
                     
                     {/* Accordion List */}
-                    <div className={`rounded-xl  bg-sb-sage/55 text-black font-medium   shadow-xl divide-y divide-${COLORS.BORDER} border-2 border-${COLORS.BORDER}`}>
+                    <div className={`rounded-xl  bg-sb-sage/55 text-display font-display   shadow-xl divide-y divide-${COLORS.BORDER} border-2 border-${COLORS.BORDER}`}>
                         {filteredFaqData.length > 0 ? (
                             filteredFaqData.map((item, i) => (
                                 <AccordionItem

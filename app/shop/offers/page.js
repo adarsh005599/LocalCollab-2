@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, Search, MessageCircle, User, Handshake, ChevronDown, ChevronUp, Check, X, RefreshCw } from 'lucide-react';
+import { TrendingUp, Search, MessageCircle, User, Handshake, ChevronDown, ChevronUp, Check, X, RefreshCw, Bell } from 'lucide-react';
 import { storage } from '@/lib/storage';
+import { supabase } from '@/lib/supabase';
 import { formatCurrency, getInitials, formatTime } from '@/lib/utils';
 import Sidebar from '@/components/Sidebar';
 import SecureDealModal from '@/components/SecureDealModal';
@@ -33,6 +34,33 @@ const statusColors = {
     rejected: { text: '#991B1B', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)' },
 };
 
+// ── Toast notification component ──
+function Toast({ toasts, onDismiss }) {
+    return (
+        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 360 }}>
+            {toasts.map(t => (
+                <div key={t.id} style={{
+                    background: C.surface, border: `1px solid ${C.border}`,
+                    borderLeft: `4px solid ${t.type === 'offer' ? C.secondary : C.primary}`,
+                    borderRadius: 12, padding: '14px 16px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                    animation: 'slideIn 0.3s ease',
+                }}>
+                    <Bell size={18} color={t.type === 'offer' ? C.secondary : C.primary} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px' }}>{t.title}</p>
+                        <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>{t.message}</p>
+                    </div>
+                    <button onClick={() => onDismiss(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textMuted, padding: 0, flexShrink: 0 }}>
+                        <X size={14} />
+                    </button>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function ShopOffersPage() {
     const router = useRouter();
     const [currentUser, setCurrentUser] = useState(null);
@@ -40,9 +68,53 @@ export default function ShopOffersPage() {
     const [offers, setOffers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [expandedOffer, setExpandedOffer] = useState(null);
-    const [counterState, setCounterState] = useState({}); // { [offerId]: { price, message, open, saving } }
+    const [counterState, setCounterState] = useState({});
     const [actionLoading, setActionLoading] = useState(null);
     const [modalOffer, setModalOffer] = useState(null);
+    const [toasts, setToasts] = useState([]);
+    const shopRef = useRef(null);
+    const prevOffersRef = useRef([]); // track previous offer states
+
+    const addToast = useCallback((title, message, type = 'info') => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, title, message, type }]);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
+    }, []);
+
+    const dismissToast = useCallback((id) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+    }, []);
+
+    const loadOffers = useCallback(async (shopProfile, silent = false) => {
+        try {
+            const data = await storage.getOffersForShop(shopProfile.id);
+
+            // Compare with previous to detect new activity
+            const prev = prevOffersRef.current;
+            data.forEach(newOffer => {
+                const old = prev.find(o => o.id === newOffer.id);
+                // New offer appeared
+                if (!old) {
+                    if (newOffer.latestSenderRole === 'influencer') {
+                        addToast('New Offer! 🎉', `${newOffer.influencerName} sent you an offer of ${formatCurrency(newOffer.latestPrice)}.`, 'offer');
+                    }
+                }
+                // Existing offer got a new message from influencer
+                else if (
+                    old.messages?.length !== newOffer.messages?.length &&
+                    newOffer.latestSenderRole === 'influencer'
+                ) {
+                    addToast('Counter Offer Received!', `${newOffer.influencerName} countered with ${formatCurrency(newOffer.latestPrice)}.`, 'offer');
+                }
+            });
+
+            prevOffersRef.current = data;
+            setOffers(data);
+        } catch (e) {
+            console.error('loadOffers error:', e);
+            if (!silent) setOffers([]);
+        }
+    }, [addToast]);
 
     useEffect(() => {
         const init = async () => {
@@ -53,8 +125,8 @@ export default function ShopOffersPage() {
                 const shopProfile = await storage.getShopByUserId(user.id);
                 if (!shopProfile) { router.push('/shop/profile?setup=true'); return; }
                 setShop(shopProfile);
-                const data = await storage.getOffersForShop(shopProfile.id);
-                setOffers(data);
+                shopRef.current = shopProfile;
+                await loadOffers(shopProfile);
             } catch (e) {
                 console.error('ShopOffersPage init error:', e);
                 setOffers([]);
@@ -63,22 +135,50 @@ export default function ShopOffersPage() {
             }
         };
         init();
-    }, [router]);
+    }, [router, loadOffers]);
 
-    const reload = async () => {
-        try {
-            const data = await storage.getOffersForShop(shop.id);
-            setOffers(data);
-        } catch (e) {
-            console.error('ShopOffersPage reload error:', e);
-        }
-    };
+    // ── Real-time Supabase subscription ──
+    useEffect(() => {
+        if (!shop) return;
+
+        const channel = supabase
+            .channel('shop-offers-realtime')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'offers',
+                filter: `shop_id=eq.${shop.id}`,
+            }, async () => {
+                await loadOffers(shopRef.current, true);
+            })
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'offer_messages', // if you have a separate messages table
+            }, async () => {
+                await loadOffers(shopRef.current, true);
+            })
+            .subscribe();
+
+        // Fallback poll every 20 seconds
+        const poll = setInterval(async () => {
+            if (shopRef.current) {
+                await loadOffers(shopRef.current, true);
+            }
+        }, 20000);
+
+        return () => {
+            supabase.removeChannel(channel);
+            clearInterval(poll);
+        };
+    }, [shop, loadOffers]);
 
     const handleStatusUpdate = async (offerId, status) => {
         setActionLoading(offerId + status);
         try {
             await storage.updateOfferStatus(offerId, status);
-            await reload();
+            await loadOffers(shopRef.current, true);
+            if (status === 'accepted') addToast('Deal Accepted! 🤝', 'You accepted the offer. Head to Messages to connect.', 'info');
         } catch (e) { alert(e.message); }
         setActionLoading(null);
     };
@@ -89,7 +189,8 @@ export default function ShopOffersPage() {
         setCounterState(prev => ({ ...prev, [offerId]: { ...prev[offerId], saving: true } }));
         try {
             await storage.addOfferMessage(offerId, 'shop', parseFloat(s.price), s.message || '');
-            await reload();
+            await loadOffers(shopRef.current, true);
+            addToast('Counter Sent!', 'Your counter offer has been sent to the influencer.', 'info');
             setCounterState(prev => ({ ...prev, [offerId]: { price: '', message: '', open: false, saving: false } }));
         } catch (e) {
             alert(e.message);
@@ -103,6 +204,7 @@ export default function ShopOffersPage() {
 
     return (
         <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif' }}>
+            <Toast toasts={toasts} onDismiss={dismissToast} />
             <Sidebar navItems={shopNav} user={sidebarUser} onLogout={handleLogout} />
             <main style={{ marginLeft: 280, padding: 40 }}>
                 <div style={{ maxWidth: 800, margin: '0 auto' }}>
@@ -118,7 +220,7 @@ export default function ShopOffersPage() {
                                     <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, margin: '0 0 4px' }}>Offers</h1>
                                     <p style={{ fontSize: 15, color: C.textMuted, margin: 0 }}>{offers.length} negotiation{offers.length !== 1 ? 's' : ''}</p>
                                 </div>
-                                <button onClick={reload} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(57,119,84,0.08)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.primary }}>
+                                <button onClick={() => loadOffers(shopRef.current)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(57,119,84,0.08)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.primary }}>
                                     <RefreshCw size={14} /> Refresh
                                 </button>
                             </div>
@@ -138,7 +240,6 @@ export default function ShopOffersPage() {
                                         const isExpanded = expandedOffer === offer.id;
                                         const cs = counterState[offer.id] || {};
                                         const isActive = offer.status === 'active';
-                                        // Show actions only when it's the shop's turn (influencer sent the last message)
                                         const isMyTurn = isActive && offer.latestSenderRole === 'influencer';
                                         const inf = { name: offer.influencerName, city: offer.influencerCity, category: offer.influencerCategory, image: offer.influencerImage };
 
@@ -146,14 +247,19 @@ export default function ShopOffersPage() {
                                             <div key={offer.id} className="card" style={{ padding: 0, overflow: 'hidden', border: `1px solid ${C.border}` }}>
                                                 {/* Card header */}
                                                 <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                                                    {/* Avatar */}
                                                     <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(57,119,84,0.1)', border: '1px solid rgba(57,119,84,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
                                                         {inf.image
                                                             ? <Image src={inf.image} alt={inf.name} width={48} height={48} style={{ objectFit: 'cover', borderRadius: '50%' }} />
                                                             : <span style={{ fontSize: 16, fontWeight: 800, color: C.primary }}>{getInitials(inf.name || '')}</span>}
                                                     </div>
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inf.name || 'Influencer'}</p>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                            <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inf.name || 'Influencer'}</p>
+                                                            {/* Dot indicator when it's your turn */}
+                                                            {isMyTurn && (
+                                                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.secondary, display: 'inline-block', flexShrink: 0, marginBottom: 4 }} title="Action required" />
+                                                            )}
+                                                        </div>
                                                         <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>{inf.city} · {inf.category}</p>
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
@@ -171,7 +277,6 @@ export default function ShopOffersPage() {
                                                 {/* Expanded thread */}
                                                 {isExpanded && (
                                                     <div style={{ borderTop: `1px solid ${C.border}` }}>
-                                                        {/* Chat history */}
                                                         <div style={{ padding: '20px 24px', background: '#FAFAFA', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 320, overflowY: 'auto' }}>
                                                             {offer.messages.map((msg, i) => {
                                                                 const isShop = msg.sender_role === 'shop';
@@ -187,7 +292,6 @@ export default function ShopOffersPage() {
                                                             })}
                                                         </div>
 
-                                                        {/* Actions */}
                                                         {isMyTurn && (
                                                             <div style={{ padding: '16px 24px', borderTop: `1px solid ${C.border}`, background: C.surface }}>
                                                                 {!cs.open ? (
@@ -249,8 +353,8 @@ export default function ShopOffersPage() {
                     )}
                 </div>
             </main>
-            
-            <SecureDealModal 
+
+            <SecureDealModal
                 isOpen={!!modalOffer}
                 onClose={() => setModalOffer(null)}
                 onSuccess={(action) => {
@@ -262,16 +366,21 @@ export default function ShopOffersPage() {
                     }
                 }}
                 influencerName={modalOffer?.influencerName || 'Influencer'}
-                influencerWallet="ALGORAND_WALLET_ADDRESS" 
+                influencerWallet="ALGORAND_WALLET_ADDRESS"
                 amount={modalOffer?.latestPrice || 0}
-                contractAddress="123456" 
-                contractABI={{ 
-                  "name": "MilestoneEscrow", 
-                  "methods": [ 
-                    { "name": "initializeDeposit", "args": [ { "type": "pay", "name": "payTxn" } ], "returns": { "type": "void" } }
-                  ] 
+                contractAddress="123456"
+                contractABI={{
+                    "name": "MilestoneEscrow",
+                    "methods": [
+                        { "name": "initializeDeposit", "args": [{ "type": "pay", "name": "payTxn" }], "returns": { "type": "void" } }
+                    ]
                 }}
             />
+
+            <style>{`
+                @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+                @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+            `}</style>
         </div>
     );
 }

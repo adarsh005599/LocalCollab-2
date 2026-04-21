@@ -32,7 +32,7 @@ const platformLinks = [
 
 export default function Footer() {
     return (
-        <footer style={{ background: "#1B2A22", color: '#fff', fontFamily: 'Inter, sans-serif', overflow: 'hidden', position: 'relative' }}>
+        <footer style={{ background: "#1B2A22", color: '#fff', fontFamily: 'display', overflow: 'hidden', position: 'relative' }}>
 
             {/* Big brand statement strip */}
             <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '28px 24px' }}>
@@ -41,7 +41,7 @@ export default function Footer() {
                         <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: C.primaryLight, margin: '0 0 6px' }}>
                             ✦ Connecting India's Local Economy ✦
                         </p>
-                        <h2 style={{ fontSize: 'clamp(32px, 5vw, 40px)', fontWeight: 900, letterSpacing: '-0.02em', margin: 0, color: '#fff', fontStyle: 'italic', textTransform: 'uppercase', lineHeight: 1.1 }}>
+                        <h2 style={{ fontSize: 'clamp(32px, 5vw, 40px)', fontWeight: 900, letterSpacing: '-0.02em', margin: 0, color: '#fff',text:'extrabold', fontStyle: 'italic', textTransform: 'uppercase', lineHeight: 1.1 }}>
                             Grow <span style={{ color: C.primary }}>Local.</span>{' '}
                             Go <span style={{ WebkitTextStroke: '1.5px ' + C.primary, color: 'transparent' }}>Viral.</span>
                         </h2>
@@ -71,7 +71,7 @@ export default function Footer() {
                         </div>
                         <span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>Local<span style={{ color: C.primaryLight }}>Collab</span></span>
                     </div>
-                    <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, maxWidth: 280, marginBottom: 32 }}>
+                    <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, font:'display', maxWidth: 280, marginBottom: 32 }}>
                         The smartest way to connect Indian local businesses with authentic, vetted micro-influencers.
                     </p>
                     <div style={{ display: 'flex', gap: 12 }}>
@@ -179,7 +179,7 @@ export default function Footer() {
                 </div>
             </div>
 
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ borderTop: '1px solid, rgba(255,255,255,0.06)', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                 <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: 0 }}>© 2025 LocalCollab. All rights reserved.</p>
                 <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: 0, fontStyle: 'italic' }}>Where local brands rise, no matter where you start</p>
             </div>
