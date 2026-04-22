@@ -77,10 +77,11 @@ export default function CampaignGenerator() {
         background: "linear-gradient(145deg, #0d2818 0%, #0a1f14 60%, #081a10 100%)",
         border: "1px solid rgba(74,222,128,0.15)",
         borderRadius: "24px",
+        font: 'display',
         overflow: "hidden",
         boxShadow: "0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(74,222,128,0.1)"
       }}>
-        <div style={{ height: "3px", background: "linear-gradient(90deg, #4ade80, #16a34a, transparent)" }} />
+        <div style={{ height: "3px", font:'display', background: "linear-gradient(90deg, #4ade80, #16a34a, transparent)" }} />
         
         <div style={{ padding: "40px 36px" }}>
           <div style={{ marginBottom: "32px" }}>
@@ -90,11 +91,11 @@ export default function CampaignGenerator() {
               borderRadius: "100px", padding: "6px 14px", marginBottom: "16px"
             }}>
               <Sparkles style={{ width: 14, height: 14, color: "#4ade80" }} />
-              <span style={{ color: "#4ade80", fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+              <span style={{ color: "#4ade80", font:'display',  fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>
                 AI-Powered
               </span>
             </div>
-            <h2 style={{ color: "#f0fdf4", fontSize: "28px", fontWeight: 800, margin: 0, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
+            <h2 style={{ color: "#f0fdf4", font:'display', fontSize: "28px", fontWeight: 800, margin: 0, letterSpacing: "-0.02em", lineHeight: 1.2 }}>
               Campaign Planner
             </h2>
             <p style={{ color: "#6b7280", fontSize: "14px", marginTop: "8px" }}>

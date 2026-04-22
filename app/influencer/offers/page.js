@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, Briefcase, MessageCircle, User, Handshake, ChevronDown, ChevronUp, Check, X, RefreshCw } from 'lucide-react';
+import { TrendingUp, Briefcase, MessageCircle, User, Handshake, ChevronDown, ChevronUp, Check, X, RefreshCw, Bell } from 'lucide-react';
 import { storage } from '@/lib/storage';
+import { supabase } from '@/lib/supabase';
 import { formatCurrency, getInitials, formatTime } from '@/lib/utils';
 import Sidebar from '@/components/Sidebar';
 
@@ -31,6 +32,35 @@ const statusColors = {
     rejected: { text: '#991B1B', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.25)' },
 };
 
+// ── Toast Component ──
+function Toast({ toasts, onDismiss }) {
+    return (
+        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 360 }}>
+            {toasts.map(t => (
+                <div key={t.id} style={{
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
+                    borderLeft: `4px solid ${t.type === 'offer' ? C.secondary : C.primary}`,
+                    borderRadius: 12,
+                    padding: '14px 16px',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                    animation: 'slideIn 0.3s ease',
+                }}>
+                    <Bell size={18} color={t.type === 'offer' ? C.secondary : C.primary} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px' }}>{t.title}</p>
+                        <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>{t.message}</p>
+                    </div>
+                    <button onClick={() => onDismiss(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textMuted, padding: 0, flexShrink: 0 }}>
+                        <X size={14} />
+                    </button>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function InfluencerOffersPage() {
     const router = useRouter();
     const [currentUser, setCurrentUser] = useState(null);
@@ -40,6 +70,56 @@ export default function InfluencerOffersPage() {
     const [expandedOffer, setExpandedOffer] = useState(null);
     const [counterState, setCounterState] = useState({});
     const [actionLoading, setActionLoading] = useState(null);
+    const [toasts, setToasts] = useState([]);
+    const [unreadOffers, setUnreadOffers] = useState({});
+    const influencerRef = useRef(null);
+    const prevOffersRef = useRef([]);
+
+    const addToast = useCallback((title, message, type = 'info') => {
+        const id = Date.now();
+        setToasts(prev => [...prev, { id, title, message, type }]);
+        setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
+    }, []);
+
+    const dismissToast = useCallback((id) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+    }, []);
+
+    const loadOffers = useCallback(async (infProfile, silent = false) => {
+        try {
+            const data = await storage.getOffersForInfluencer(infProfile.id);
+
+            const prev = prevOffersRef.current;
+            const newUnread = {};
+
+            data.forEach(newOffer => {
+                const old = prev.find(o => o.id === newOffer.id);
+
+                if (!old) {
+                    if (newOffer.latestSenderRole === 'shop') {
+                        addToast('New Offer! 🎉', `${newOffer.shopName} sent you an offer of ${formatCurrency(newOffer.latestPrice)}.`, 'offer');
+                        newUnread[newOffer.id] = true;
+                    }
+                } else if (
+                    old.messages?.length !== newOffer.messages?.length &&
+                    newOffer.latestSenderRole === 'shop'
+                ) {
+                    addToast('Counter Offer Received!', `${newOffer.shopName} countered with ${formatCurrency(newOffer.latestPrice)}.`, 'offer');
+                    newUnread[newOffer.id] = true;
+                }
+            });
+
+            if (Object.keys(newUnread).length > 0) {
+                setUnreadOffers(prev => ({ ...prev, ...newUnread }));
+            }
+
+            prevOffersRef.current = data;
+            setOffers(data);
+        } catch (e) {
+            console.error('loadOffers error:', e);
+            if (!silent) setOffers([]);
+        }
+    }, [addToast]);
 
     useEffect(() => {
         const init = async () => {
@@ -49,16 +129,44 @@ export default function InfluencerOffersPage() {
             const infProfile = await storage.getInfluencerByUserId(user.id);
             if (!infProfile) { router.push('/influencer/profile?setup=true'); return; }
             setInfluencer(infProfile);
-            const data = await storage.getOffersForInfluencer(infProfile.id);
-            setOffers(data);
+            influencerRef.current = infProfile;
+            await loadOffers(infProfile);
             setLoading(false);
         };
         init();
-    }, [router]);
+    }, [router, loadOffers]);
+
+    // ── Realtime subscription ──
+    useEffect(() => {
+        if (!influencer) return;
+
+        const channel = supabase
+            .channel('inf-offers-realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'offers' },
+                async () => { await loadOffers(influencerRef.current, true); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'offer_messages' },
+                async () => { await loadOffers(influencerRef.current, true); })
+            .subscribe();
+
+        const poll = setInterval(async () => {
+            if (influencerRef.current) await loadOffers(influencerRef.current, true);
+        }, 20000);
+
+        return () => {
+            supabase.removeChannel(channel);
+            clearInterval(poll);
+        };
+    }, [influencer, loadOffers]);
+
+    const handleExpandOffer = (offerId) => {
+        setExpandedOffer(prev => prev === offerId ? null : offerId);
+        if (unreadOffers[offerId]) {
+            setUnreadOffers(prev => { const n = { ...prev }; delete n[offerId]; return n; });
+        }
+    };
 
     const reload = async () => {
-        const data = await storage.getOffersForInfluencer(influencer.id);
-        setOffers(data);
+        if (influencerRef.current) await loadOffers(influencerRef.current);
     };
 
     const handleStatusUpdate = async (offerId, status) => {
@@ -66,6 +174,7 @@ export default function InfluencerOffersPage() {
         try {
             await storage.updateOfferStatus(offerId, status);
             await reload();
+            if (status === 'accepted') addToast('Deal Accepted! 🤝', 'You accepted the offer. Head to Messages to connect.', 'info');
         } catch (e) { alert(e.message); }
         setActionLoading(null);
     };
@@ -77,6 +186,7 @@ export default function InfluencerOffersPage() {
         try {
             await storage.addOfferMessage(offerId, 'influencer', parseFloat(s.price), s.message || '');
             await reload();
+            addToast('Counter Sent!', 'Your counter offer has been sent to the shop.', 'info');
             setCounterState(prev => ({ ...prev, [offerId]: { price: '', message: '', open: false, saving: false } }));
         } catch (e) {
             alert(e.message);
@@ -88,8 +198,11 @@ export default function InfluencerOffersPage() {
     const infName = influencer?.name || currentUser?.name || 'Creator';
     const sidebarUser = { name: infName, subtitle: influencer?.city || '', initials: getInitials(infName), profileHref: '/influencer/profile' };
 
+    const totalUnreadOffers = Object.keys(unreadOffers).length;
+
     return (
         <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif' }}>
+            <Toast toasts={toasts} onDismiss={dismissToast} />
             <Sidebar navItems={infNav} user={sidebarUser} onLogout={handleLogout} />
             <main style={{ marginLeft: 280, padding: 40 }}>
                 <div style={{ maxWidth: 800, margin: '0 auto' }}>
@@ -105,9 +218,23 @@ export default function InfluencerOffersPage() {
                                     <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, margin: '0 0 4px' }}>My Offers</h1>
                                     <p style={{ fontSize: 15, color: C.textMuted, margin: 0 }}>{offers.length} negotiation{offers.length !== 1 ? 's' : ''}</p>
                                 </div>
-                                <button onClick={reload} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(57,119,84,0.08)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.primary }}>
-                                    <RefreshCw size={14} /> Refresh
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    {totalUnreadOffers > 0 && (
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', gap: 6,
+                                            background: 'rgba(235,107,64,0.1)', border: '1px solid rgba(235,107,64,0.3)',
+                                            borderRadius: 20, padding: '6px 14px',
+                                        }}>
+                                            <Bell size={14} color={C.secondary} />
+                                            <span style={{ fontSize: 13, fontWeight: 800, color: C.secondary }}>
+                                                {totalUnreadOffers} new activit{totalUnreadOffers === 1 ? 'y' : 'ies'}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <button onClick={reload} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(57,119,84,0.08)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.primary }}>
+                                        <RefreshCw size={14} /> Refresh
+                                    </button>
+                                </div>
                             </div>
 
                             {offers.length === 0 ? (
@@ -125,27 +252,69 @@ export default function InfluencerOffersPage() {
                                         const isExpanded = expandedOffer === offer.id;
                                         const cs = counterState[offer.id] || {};
                                         const isActive = offer.status === 'active';
-                                        // Show actions only when it's the influencer's turn (shop sent the last message)
                                         const isMyTurn = isActive && offer.latestSenderRole === 'shop';
+                                        const hasUnread = !!unreadOffers[offer.id];
 
                                         return (
-                                            <div key={offer.id} className="card" style={{ padding: 0, overflow: 'hidden', border: `1px solid ${C.border}` }}>
-                                                <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                                                    {/* Shop avatar */}
-                                                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(235,107,64,0.1)', border: '1px solid rgba(235,107,64,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                        <span style={{ fontSize: 16, fontWeight: 800, color: C.secondary }}>{getInitials(offer.shopName || '')}</span>
+                                            <div
+                                                key={offer.id}
+                                                className="card"
+                                                style={{
+                                                    padding: 0, overflow: 'hidden',
+                                                    border: `1px solid ${hasUnread ? 'rgba(235,107,64,0.4)' : C.border}`,
+                                                    boxShadow: hasUnread ? '0 0 0 3px rgba(235,107,64,0.08)' : undefined,
+                                                    transition: 'box-shadow 0.2s, border-color 0.2s',
+                                                }}
+                                            >
+                                                {/* New activity banner */}
+                                                {hasUnread && (
+                                                    <div style={{
+                                                        padding: '8px 20px',
+                                                        background: 'rgba(235,107,64,0.08)',
+                                                        borderBottom: '1px solid rgba(235,107,64,0.15)',
+                                                        display: 'flex', alignItems: 'center', gap: 8,
+                                                    }}>
+                                                        <Bell size={13} color={C.secondary} />
+                                                        <span style={{ fontSize: 12, fontWeight: 800, color: C.secondary }}>
+                                                            New activity — tap to review
+                                                        </span>
                                                     </div>
+                                                )}
+
+                                                {/* Card header */}
+                                                <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                                                    {/* Shop avatar with unread dot */}
+                                                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                                                        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(235,107,64,0.1)', border: '1px solid rgba(235,107,64,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            <span style={{ fontSize: 16, fontWeight: 800, color: C.secondary }}>{getInitials(offer.shopName || '')}</span>
+                                                        </div>
+                                                        {hasUnread && (
+                                                            <div style={{
+                                                                position: 'absolute', top: -2, right: -2,
+                                                                width: 12, height: 12,
+                                                                background: C.secondary, borderRadius: '50%',
+                                                                border: '2px solid #FFFFFF',
+                                                            }} />
+                                                        )}
+                                                    </div>
+
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{offer.shopName || 'Shop'}</p>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                            <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{offer.shopName || 'Shop'}</p>
+                                                            {isMyTurn && (
+                                                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.secondary, display: 'inline-block', flexShrink: 0, marginBottom: 4 }} title="Action required" />
+                                                            )}
+                                                        </div>
                                                         <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>{offer.shopCity} · {offer.shopCategory} · Started by <strong>{offer.initiatedBy}</strong></p>
                                                     </div>
+
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <p style={{ fontSize: 11, color: C.textMuted, fontWeight: 600, margin: '0 0 4px', textTransform: 'uppercase' }}>Latest Price</p>
                                                             <p style={{ fontSize: 18, fontWeight: 900, color: C.text, margin: 0 }}>{formatCurrency(offer.latestPrice)}</p>
                                                         </div>
                                                         <span style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 800, color: sc.text, background: sc.bg, border: `1px solid ${sc.border}`, textTransform: 'capitalize' }}>{offer.status}</span>
-                                                        <button onClick={() => setExpandedOffer(isExpanded ? null : offer.id)} style={{ padding: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: C.textMuted }}>
+                                                        <button onClick={() => handleExpandOffer(offer.id)} style={{ padding: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: C.textMuted }}>
                                                             {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                                                         </button>
                                                     </div>
@@ -153,7 +322,6 @@ export default function InfluencerOffersPage() {
 
                                                 {isExpanded && (
                                                     <div style={{ borderTop: `1px solid ${C.border}` }}>
-                                                        {/* Chat thread */}
                                                         <div style={{ padding: '20px 24px', background: '#FAFAFA', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 320, overflowY: 'auto' }}>
                                                             {offer.messages.map((msg, i) => {
                                                                 const isMe = msg.sender_role === 'influencer';
@@ -230,6 +398,11 @@ export default function InfluencerOffersPage() {
                     )}
                 </div>
             </main>
+
+            <style>{`
+                @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+                @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+            `}</style>
         </div>
     );
 }

@@ -40,9 +40,11 @@ function Toast({ toasts, onDismiss }) {
         <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 360 }}>
             {toasts.map(t => (
                 <div key={t.id} style={{
-                    background: C.surface, border: `1px solid ${C.border}`,
+                    background: C.surface,
+                    border: `1px solid ${C.border}`,
                     borderLeft: `4px solid ${t.type === 'offer' ? C.secondary : C.primary}`,
-                    borderRadius: 12, padding: '14px 16px',
+                    borderRadius: 12,
+                    padding: '14px 16px',
                     boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                     display: 'flex', alignItems: 'flex-start', gap: 12,
                     animation: 'slideIn 0.3s ease',
@@ -72,8 +74,10 @@ export default function ShopOffersPage() {
     const [actionLoading, setActionLoading] = useState(null);
     const [modalOffer, setModalOffer] = useState(null);
     const [toasts, setToasts] = useState([]);
+    // unread offer activity badge: { [offerId]: true }
+    const [unreadOffers, setUnreadOffers] = useState({});
     const shopRef = useRef(null);
-    const prevOffersRef = useRef([]); // track previous offer states
+    const prevOffersRef = useRef([]);
 
     const addToast = useCallback((title, message, type = 'info') => {
         const id = Date.now();
@@ -89,24 +93,33 @@ export default function ShopOffersPage() {
         try {
             const data = await storage.getOffersForShop(shopProfile.id);
 
-            // Compare with previous to detect new activity
             const prev = prevOffersRef.current;
+            const newUnread = {};
+
             data.forEach(newOffer => {
                 const old = prev.find(o => o.id === newOffer.id);
-                // New offer appeared
+
+                // Completely new offer from influencer
                 if (!old) {
                     if (newOffer.latestSenderRole === 'influencer') {
                         addToast('New Offer! 🎉', `${newOffer.influencerName} sent you an offer of ${formatCurrency(newOffer.latestPrice)}.`, 'offer');
+                        newUnread[newOffer.id] = true;
                     }
                 }
-                // Existing offer got a new message from influencer
+                // New message added to existing offer by influencer
                 else if (
                     old.messages?.length !== newOffer.messages?.length &&
                     newOffer.latestSenderRole === 'influencer'
                 ) {
                     addToast('Counter Offer Received!', `${newOffer.influencerName} countered with ${formatCurrency(newOffer.latestPrice)}.`, 'offer');
+                    newUnread[newOffer.id] = true;
                 }
             });
+
+            // Merge new unread flags without clearing ones user hasn't seen
+            if (Object.keys(newUnread).length > 0) {
+                setUnreadOffers(prev => ({ ...prev, ...newUnread }));
+            }
 
             prevOffersRef.current = data;
             setOffers(data);
@@ -143,28 +156,14 @@ export default function ShopOffersPage() {
 
         const channel = supabase
             .channel('shop-offers-realtime')
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'offers',
-                filter: `shop_id=eq.${shop.id}`,
-            }, async () => {
-                await loadOffers(shopRef.current, true);
-            })
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'offer_messages', // if you have a separate messages table
-            }, async () => {
-                await loadOffers(shopRef.current, true);
-            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'offers', filter: `shop_id=eq.${shop.id}` },
+                async () => { await loadOffers(shopRef.current, true); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'offer_messages' },
+                async () => { await loadOffers(shopRef.current, true); })
             .subscribe();
 
-        // Fallback poll every 20 seconds
         const poll = setInterval(async () => {
-            if (shopRef.current) {
-                await loadOffers(shopRef.current, true);
-            }
+            if (shopRef.current) await loadOffers(shopRef.current, true);
         }, 20000);
 
         return () => {
@@ -172,6 +171,14 @@ export default function ShopOffersPage() {
             clearInterval(poll);
         };
     }, [shop, loadOffers]);
+
+    // Clear unread flag when user expands that offer
+    const handleExpandOffer = (offerId) => {
+        setExpandedOffer(prev => prev === offerId ? null : offerId);
+        if (unreadOffers[offerId]) {
+            setUnreadOffers(prev => { const n = { ...prev }; delete n[offerId]; return n; });
+        }
+    };
 
     const handleStatusUpdate = async (offerId, status) => {
         setActionLoading(offerId + status);
@@ -202,6 +209,8 @@ export default function ShopOffersPage() {
     const shopName = shop?.businessName || currentUser?.name || 'My Shop';
     const sidebarUser = { name: shopName, subtitle: shop?.city || '', initials: getInitials(shopName), profileHref: '/shop/profile' };
 
+    const totalUnreadOffers = Object.keys(unreadOffers).length;
+
     return (
         <div style={{ minHeight: '100vh', background: C.bg, fontFamily: 'Inter, sans-serif' }}>
             <Toast toasts={toasts} onDismiss={dismissToast} />
@@ -218,11 +227,31 @@ export default function ShopOffersPage() {
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
                                 <div>
                                     <h1 style={{ fontSize: 28, fontWeight: 900, color: C.text, margin: '0 0 4px' }}>Offers</h1>
-                                    <p style={{ fontSize: 15, color: C.textMuted, margin: 0 }}>{offers.length} negotiation{offers.length !== 1 ? 's' : ''}</p>
+                                    <p style={{ fontSize: 15, color: C.textMuted, margin: 0 }}>
+                                        {offers.length} negotiation{offers.length !== 1 ? 's' : ''}
+                                    </p>
                                 </div>
-                                <button onClick={() => loadOffers(shopRef.current)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(57,119,84,0.08)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.primary }}>
-                                    <RefreshCw size={14} /> Refresh
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    {/* Unread offers badge */}
+                                    {totalUnreadOffers > 0 && (
+                                        <div style={{
+                                            display: 'flex', alignItems: 'center', gap: 6,
+                                            background: 'rgba(235,107,64,0.1)', border: '1px solid rgba(235,107,64,0.3)',
+                                            borderRadius: 20, padding: '6px 14px',
+                                        }}>
+                                            <Bell size={14} color={C.secondary} />
+                                            <span style={{ fontSize: 13, fontWeight: 800, color: C.secondary }}>
+                                                {totalUnreadOffers} new activit{totalUnreadOffers === 1 ? 'y' : 'ies'}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <button
+                                        onClick={() => loadOffers(shopRef.current)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(57,119,84,0.08)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: C.primary }}
+                                    >
+                                        <RefreshCw size={14} /> Refresh
+                                    </button>
+                                </div>
                             </div>
 
                             {offers.length === 0 ? (
@@ -241,34 +270,71 @@ export default function ShopOffersPage() {
                                         const cs = counterState[offer.id] || {};
                                         const isActive = offer.status === 'active';
                                         const isMyTurn = isActive && offer.latestSenderRole === 'influencer';
+                                        const hasUnread = !!unreadOffers[offer.id];
                                         const inf = { name: offer.influencerName, city: offer.influencerCity, category: offer.influencerCategory, image: offer.influencerImage };
 
                                         return (
-                                            <div key={offer.id} className="card" style={{ padding: 0, overflow: 'hidden', border: `1px solid ${C.border}` }}>
+                                            <div
+                                                key={offer.id}
+                                                className="card"
+                                                style={{
+                                                    padding: 0, overflow: 'hidden',
+                                                    border: `1px solid ${hasUnread ? 'rgba(235,107,64,0.4)' : C.border}`,
+                                                    boxShadow: hasUnread ? '0 0 0 3px rgba(235,107,64,0.08)' : undefined,
+                                                    transition: 'box-shadow 0.2s, border-color 0.2s',
+                                                }}
+                                            >
+                                                {/* New activity banner at the top of the card */}
+                                                {hasUnread && (
+                                                    <div style={{
+                                                        padding: '8px 20px',
+                                                        background: 'rgba(235,107,64,0.08)',
+                                                        borderBottom: '1px solid rgba(235,107,64,0.15)',
+                                                        display: 'flex', alignItems: 'center', gap: 8,
+                                                    }}>
+                                                        <Bell size={13} color={C.secondary} />
+                                                        <span style={{ fontSize: 12, fontWeight: 800, color: C.secondary }}>
+                                                            New activity — tap to review
+                                                        </span>
+                                                    </div>
+                                                )}
+
                                                 {/* Card header */}
                                                 <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                                                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(57,119,84,0.1)', border: '1px solid rgba(57,119,84,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-                                                        {inf.image
-                                                            ? <Image src={inf.image} alt={inf.name} width={48} height={48} style={{ objectFit: 'cover', borderRadius: '50%' }} />
-                                                            : <span style={{ fontSize: 16, fontWeight: 800, color: C.primary }}>{getInitials(inf.name || '')}</span>}
+                                                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                                                        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(57,119,84,0.1)', border: '1px solid rgba(57,119,84,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                                            {inf.image
+                                                                ? <Image src={inf.image} alt={inf.name} width={48} height={48} style={{ objectFit: 'cover', borderRadius: '50%' }} />
+                                                                : <span style={{ fontSize: 16, fontWeight: 800, color: C.primary }}>{getInitials(inf.name || '')}</span>}
+                                                        </div>
+                                                        {/* Unread dot on avatar */}
+                                                        {hasUnread && (
+                                                            <div style={{
+                                                                position: 'absolute', top: -2, right: -2,
+                                                                width: 12, height: 12,
+                                                                background: C.secondary, borderRadius: '50%',
+                                                                border: '2px solid #FFFFFF',
+                                                            }} />
+                                                        )}
                                                     </div>
+
                                                     <div style={{ flex: 1, minWidth: 0 }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                                             <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inf.name || 'Influencer'}</p>
-                                                            {/* Dot indicator when it's your turn */}
                                                             {isMyTurn && (
                                                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: C.secondary, display: 'inline-block', flexShrink: 0, marginBottom: 4 }} title="Action required" />
                                                             )}
                                                         </div>
                                                         <p style={{ fontSize: 13, color: C.textMuted, margin: 0 }}>{inf.city} · {inf.category}</p>
                                                     </div>
+
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <p style={{ fontSize: 11, color: C.textMuted, fontWeight: 600, margin: '0 0 4px', textTransform: 'uppercase' }}>Latest Price</p>
                                                             <p style={{ fontSize: 18, fontWeight: 900, color: C.text, margin: 0 }}>{formatCurrency(offer.latestPrice)}</p>
                                                         </div>
                                                         <span style={{ padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 800, color: sc.text, background: sc.bg, border: `1px solid ${sc.border}`, textTransform: 'capitalize' }}>{offer.status}</span>
-                                                        <button onClick={() => setExpandedOffer(isExpanded ? null : offer.id)} style={{ padding: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: C.textMuted }}>
+                                                        <button onClick={() => handleExpandOffer(offer.id)} style={{ padding: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: C.textMuted }}>
                                                             {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                                                         </button>
                                                     </div>
