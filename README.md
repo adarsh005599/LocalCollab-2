@@ -53,7 +53,6 @@ The matching engine (`lib/matching.js`) scores every influencer-business pair on
 Final score is normalized to **0–100%**.
 
 ---
-
 ## 🛠️ Tech Stack
 
 | Technology       | Purpose                          |
