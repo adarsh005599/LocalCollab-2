@@ -9,6 +9,7 @@ Many small businesses (restaurants, boutiques, gyms, salons, etc.) want to promo
 - 🏪 **Businesses** can register, set a marketing budget, and get matched with ideal influencers in their city.
 - 📸 **Influencers** can list their profile, set their price per post, and discover collaboration opportunities from nearby businesses.
 
+
 ---
 ## ✨ Key Features
 
